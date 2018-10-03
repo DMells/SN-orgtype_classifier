@@ -1,0 +1,20 @@
+- connect to localhost - org_type classifier
+-Load dataframe - DONE
+-Loop through each item of org_string
+-Pass string to hosted server URL
+-Fetch returned result (highest prob)
+-Add result to df column
+-Lookup result to find if company/not company
+-Add probability to a df column too
+
+Task 2
+- Obtain first 100 org strings, and concatenate them into the request. - DONE
+
+- Some org_strings don't output anything from the orgtype-classifier and results in a json error - could be that actually only takes up to 50 strings, not 100.
+- Refactor org_id and classify_org as duplicate code 
+- looks like you can pass multiple requests to companies house
+- test to see if can just pass whole array to comp house rather than sleeping.
+- need to output matched company name too from comp house api
+- some of the comp house api strings have double spaces
+- cant get comp house multiple string to work when passed as a list to chwrapper. Try curl and concatenating strings.
+- terms like '001 TAXIS' don't return the correct response (blank dictionary)

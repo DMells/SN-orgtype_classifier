@@ -1,0 +1,14 @@
+{
+  "dedupe/tests/test_api.py": true,
+  "dedupe/tests/test_blocking.py": true,
+  "dedupe/tests/test_canonical.py": true,
+  "dedupe/tests/test_core.py": true,
+  "dedupe/tests/test_dedupe.py": true,
+  "dedupe/tests/test_labeler.py": true,
+  "dedupe/tests/test_predicates.py": true,
+  "dedupe/tests/test_price.py": true,
+  "dedupe/tests/test_sampling.py": true,
+  "dedupe/tests/test_serializer.py": true,
+  "dedupe/tests/test_tfidf.py": true,
+  "dedupe/tests/test_training.py": true
+}
