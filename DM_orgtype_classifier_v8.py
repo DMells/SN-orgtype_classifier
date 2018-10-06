@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 import chwrapper
 import time
-# import pdb
+import pdb
 import math
 import config
 import sys
@@ -31,17 +31,28 @@ def load_df(data_dir, data_file):
     return df, df_name
 
 def pre_processing(df):
-    # pdb.set_trace()
     print("Data Sample: ")
-    print(df.head(10))
+    print(df.head(3))
+    global string_col
+    string_col = str(input("\nWhat is the exact name of the column containing the organisation name? \n(without quotes, see above sample): \n"))
     time.sleep(0.5)
-    print("Converting org_string to string type:")
-    df['org_string'].astype(str)
+    
+    # User inputs column with org strings in, with catch if incorrect name entered
+    while True:
+        try: 
+            print("Converting org_string to string type...")
+            df[string_col] = df[string_col].astype(str)
+
+        except KeyError:
+            string_col = str(input("Incorrect organisation name column entered, try again :"))
+            continue
+        break
     time.sleep(0.5)
-    print("Done")
+    print("\n...done")
     time.sleep(0.5)
     nans = lambda df: df.loc[df['org_string'].isnull()]
-    print("There are {} blank org_strings in the file: \n".format(len(nans(df))))
+    print("\nThere are {} blank org_strings in the file".format(len(nans(df))))
+    time.sleep(0.5)
     if len(nans(df)) > 0:
         print(nans(df))
         choice = input("Type 'y' to delete blank rows or 'n' to quit and self-amend :")
@@ -50,7 +61,7 @@ def pre_processing(df):
         else:
             sys.exit()
     time.sleep(0.5)
-    print("Progressing to org classification")
+    print("Progressing to org classification \n")
 
 
     # print("There are {} blanks" + df.isnull().values.any())
@@ -67,7 +78,6 @@ def classify_org(df):
             concat_string.append(word)
         concat_string = '&q='.join(concat_string)
         url = r'http://localhost:8080/predict?q=' + str(concat_string)
-        # pdb.set_trace()
         r = requests.get(url)
         try:
         # Convert requests response object to python dict
@@ -107,7 +117,6 @@ def map_columns(df):
     # Create comp or not column mapping the values of comp_or_not to the
     # org_type
     df['company_or_not'] = df['org_type'].map(comp_or_not_dict)
-    save_adjusted_data(df, df_name)
     org_id_dict = get_org_id(df)
     df['obtained_id'] = df['org_string'].map(org_id_dict)
     return df
@@ -161,7 +170,7 @@ def get_org_id(df):
     # Split org_string array into multiple arrays. Length of sub-array based on max batch size of 600 
     # rounded up. array_split doesn't have to have equal batch sizes.
     for chunk in np.array_split(org_strings, math.ceil(len(org_strings)/600), axis=0):
-        print("Processing companies house batch of size: " + str(len(chunk)))
+        print("\nProcessing companies house batch of size: " + str(len(chunk)))
         # For each org_string in the sub-array of org_strings, pull org data from companies house
         for word in chunk:
             r = s.search_companies(word)
@@ -172,31 +181,60 @@ def get_org_id(df):
 
         # Print progress
         chunk_propn += int(len(chunk))
-        print("Progress: " + str(chunk_propn) + " of " + str(len(org_strings)))
+        time.sleep(0.5)
+        print("\nProgress: " + str(chunk_propn) + " of " + str(len(org_strings)))
 
         # Companies House API only allows up to 600 requests per 5 mins.
         # If the batch wasn't the last batch, wait for 5 mins, then loop back to grab next chunk
         if chunk_propn < len(org_strings):
-            print("Sleeping as close to batch limit")  
+            print("\nSleeping as close to batch limit")  
             time.sleep(5 * 60)
 
     return org_id
 
-def post_processing(df):
+def post_processing(df, df_name):
     time.sleep(1)
-    print("Post processed data Sample: ")
+    print("\nPost processed data Sample: ")
     print(df.head(10))
     time.sleep(0.5)
-    print("Checking org_id data: ")
+    print("\nChecking org_id data: ")
     time.sleep(0.5)
     nans = lambda df: df.loc[df['obtained_id'].isnull()]
-    print("There are {} blank org_ids in the file.".format(len(nans(df))))
+    print("\nThere are {} blank org_ids in the file.".format(len(nans(df))))
     if len(nans(df)) != 0:
         print(nans(df))
+    preset_id = str(input("\nIs there a column in the dataset representing already-analysed company numbers? (y/n) :"))
+    if preset_id == 'y':
+        id_comparison = str(input("\nPlease enter the name of the comparative column :\n"))
+        time.sleep(0.5)
+        while True:
+            try:
+                print("\nComparing obtained_ids to pre-analysed ids...")
+                df[id_comparison] = df[id_comparison].astype(int)
+                df['obtained_id'] = df['obtained_id'].astype(int)
+            except KeyError:
+                id_comparison = str(input("\nIncorrect id column name entered, try again :"))
+                continue
+            break
+  
+        df['id_mismatch'] = df[id_comparison] != df['obtained_id']
 
- 
+        print("\nThere is/are {} mis-matching ids in the file.\n".format(sum(df['id_mismatch'])))
+        time.sleep(0.5)
+
+        # If there are mis-matching IDs, print a condensed table and save to separate file for further investigation
+        # Prevents having to re-run each time just to see the errors
+        if (sum(df['id_mismatch'])) > 0:
+            df_errors = df[df['id_mismatch']==True]
+            print(df_errors[[string_col, id_comparison, 'obtained_id']])
+            time.sleep(0.5)
+            print("\nSaving mismatching ids to : " + str(df_name) + '_classified_errors.csv')
+            df_errors.to_csv(df_name + '_classified_errors.csv')
+            time.sleep(0.5)
+    return df
 # Save dataframe as CSV under amended file name
 def save_adjusted_data(df, name):
+    print("\nSaving main output to : " + str(df_name) + '_classified.csv')
     df.to_csv(name + '_classified.csv')
 
 
@@ -228,7 +266,7 @@ if __name__ == '__main__':
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
     pre_processing(df)
     df = map_columns(df)
-    post_processing(df)
+    df = post_processing(df, df_name)
     save_adjusted_data(df, df_name)
 
 
