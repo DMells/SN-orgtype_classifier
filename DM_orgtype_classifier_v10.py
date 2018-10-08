@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 import chwrapper
 import time
-import pdb
+# import pdb
 import math
 import config
 import sys
@@ -27,7 +27,7 @@ def get_input_args():
 def load_df(data_dir, data_file):
     df = pd.read_csv(str(data_dir + data_file))
     df_name = str(data_file)[:-4]
-    # df = df[0:50]
+    # df = df[0:10]
     return df, df_name
 
 def pre_processing(df):
@@ -61,7 +61,7 @@ def pre_processing(df):
         else:
             sys.exit()
     time.sleep(0.5)
-    print("Progressing to org classification \n")
+    print("\nProgressing to org classification")
 
 
     # print("There are {} blanks" + df.isnull().values.any())
@@ -142,7 +142,7 @@ def get_org_id(df):
                 # r returns a nested dict with complete info on the org. Below pulls just the ID number.
                 org_id[word] = comp_house_dict['items'][0]['company_number']
                 org_id.update(org_id)
-
+            org_id.to_csv('org_id.csv')
             chunk_propn += int(len(chunk))
             time.sleep(0.5)
             print("\nProgress: " + str(chunk_propn) + " of " + str(len(org_strings)))    
@@ -162,10 +162,12 @@ def get_org_id(df):
                 partial_org_id = call_api(org_strings)
                 empty_id_df['obtained_id'] = empty_id_df['org_string'].map(partial_org_id)
                 df_merged = pd.concat([filled_id_df, empty_id_df])
+                df_merged.to_csv(df_merged + '_partial.csv')
                 return df_merged
             else:
                 org_id = call_api(org_strings)
                 df['obtained_id'] = df['org_string'].map(org_id)
+                save_adjusted_data(df, df_name)
                 return df
 
         except:
@@ -194,7 +196,12 @@ def post_processing(df, df_name):
     time.sleep(0.5)
     print("\nChecking org_id data: ")
     time.sleep(0.5)
-    df['obtained_id'] = df['obtained_id'].astype(int)
+    # Not all companies house ids are purely integers
+    # try:
+    #     df['obtained_id'] = df['obtained_id'].astype(int)
+    # except ValueError:
+    #     continue
+
     nans = lambda df: df.loc[df['obtained_id'].isnull()]
     print("\nThere are {} blank org_ids in the file.".format(len(nans(df))))
     if len(nans(df)) != 0:
@@ -206,7 +213,8 @@ def post_processing(df, df_name):
         while True:
             try:
                 print("\nComparing obtained_ids to pre-analysed ids...")
-                df[id_comparison] = df[id_comparison].astype(int)
+                df[id_comparison] = df[id_comparison].str.lstrip("0")
+                df['obtained_id'] = df['obtained_id'].str.lstrip("0")
                 
             except KeyError:
                 id_comparison = str(input("\nIncorrect id column name entered, try again :"))
@@ -263,6 +271,7 @@ if __name__ == '__main__':
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
     pre_processing(df)
     df = map_columns(df)
+    save_adjusted_data(df, df_name)
     df = post_processing(df, df_name)
     save_adjusted_data(df, df_name)
 

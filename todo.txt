@@ -1,30 +1,25 @@
-- connect to localhost - org_type classifier
--Load dataframe - DONE
--Loop through each item of org_string
--Pass string to hosted server URL
--Fetch returned result (highest prob)
--Add result to df column
--Lookup result to find if company/not company
--Add probability to a df column too
-
-Task 2
-- Obtain first 100 org strings, and concatenate them into the request. - DONE
-
-- Some org_strings don't output anything from the orgtype-classifier and results in a json error - could be that actually only takes up to 50 strings, not 100.
+-Add probability to a df column too - 
 - Refactor org_id and classify_org as duplicate code 
-- looks like you can pass multiple requests to companies house
-- test to see if can just pass whole array to comp house rather than sleeping.
-- need to output matched company name too from comp house api
 - some of the comp house api strings have double spaces
 - cant get comp house multiple string to work when passed as a list to chwrapper. Try curl and concatenating strings.
-- terms like '001 TAXIS' don't return the correct response (blank dictionary)
-- perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time. - URGENT
-- build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id' - DONE
 - send email notification once all classified?
 - tqdm is a cool package for progress bars https://pypi.org/project/tqdm/
-- could just save after each batch, remove sleep timer and just force through until finished.
+- output is creating an additional duplicated index column 
 
-    httplib_response = conn.getresponse(buffering=True)
-TypeError: getresponse() got an unexpected keyword argument 'buffering'
-
-- currently starting from correct place but not merging old with new dicts.
+---------------COMPLETED--------------
+- connect to localhost - org_type classifier - DONE
+-Load dataframe - DONE
+-Loop through each item of org_string - DONE
+-Pass string to hosted server URL - DONE
+-Fetch returned result (highest prob) - DONE
+-Add result to df column - DONE
+-Lookup result to find if company/not company - DONE
+- currently starting from correct place but not merging old with new dicts. - DONE
+- Obtain first 100 org strings, and concatenate them into the request. - DONE
+- Some org_strings don't output anything from the orgtype-classifier and results in a json error - could be that actually only takes up to 50 strings, not 100. - DONE
+- looks like you can pass multiple requests to companies house - CANT
+- need to output matched company name too from comp house api - DONE
+- terms like '001 TAXIS' don't return the correct response (blank dictionary) - DONE
+- perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time. - DONE
+- build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id' - DONE
+- could just save after each batch, remove sleep timer and just force through until finished. - DONE
