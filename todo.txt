@@ -18,7 +18,13 @@ Task 2
 - some of the comp house api strings have double spaces
 - cant get comp house multiple string to work when passed as a list to chwrapper. Try curl and concatenating strings.
 - terms like '001 TAXIS' don't return the correct response (blank dictionary)
-- perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time.
-- build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id'
+- perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time. - URGENT
+- build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id' - DONE
 - send email notification once all classified?
 - tqdm is a cool package for progress bars https://pypi.org/project/tqdm/
+- could just save after each batch, remove sleep timer and just force through until finished.
+
+    httplib_response = conn.getresponse(buffering=True)
+TypeError: getresponse() got an unexpected keyword argument 'buffering'
+
+- currently starting from correct place but not merging old with new dicts.
