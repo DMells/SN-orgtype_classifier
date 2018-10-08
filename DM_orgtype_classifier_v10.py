@@ -7,10 +7,11 @@ import argparse
 import numpy as np
 import chwrapper
 import time
-# import pdb
+import pdb
 import math
 import config
 import sys
+import urllib.error
 
 # Define input arguments for data file and directory customisation
 def get_input_args():
@@ -27,7 +28,7 @@ def get_input_args():
 def load_df(data_dir, data_file):
     df = pd.read_csv(str(data_dir + data_file))
     df_name = str(data_file)[:-4]
-    # df = df[0:10]
+    # df = df[0:5000]
     return df, df_name
 
 def pre_processing(df):
@@ -142,7 +143,6 @@ def get_org_id(df):
                 # r returns a nested dict with complete info on the org. Below pulls just the ID number.
                 org_id[word] = comp_house_dict['items'][0]['company_number']
                 org_id.update(org_id)
-            org_id.to_csv('org_id.csv')
             chunk_propn += int(len(chunk))
             time.sleep(0.5)
             print("\nProgress: " + str(chunk_propn) + " of " + str(len(org_strings)))    
@@ -154,15 +154,20 @@ def get_org_id(df):
             # Filter the df for only the blank obtained_id rows
             if 'obtained_id' in df:
             # Filter df for blank ids
+                
                 isnull = df.obtained_id.isnull()
                 notnull = df.obtained_id.notnull()
                 empty_id_df = df[isnull]
                 filled_id_df = df[notnull]
                 org_strings = empty_id_df['org_string']
                 partial_org_id = call_api(org_strings)
+                # pdb.set_trace()
+                # Below returns A value is trying to be set on a copy of a slice from a DataFrame.
+# Try using .loc[row_indexer,col_indexer] = value instead
                 empty_id_df['obtained_id'] = empty_id_df['org_string'].map(partial_org_id)
                 df_merged = pd.concat([filled_id_df, empty_id_df])
-                df_merged.to_csv(df_merged + '_partial.csv')
+                # ***********code moves to except after the below:
+                df_merged.to_csv(df_name + '_partial.csv')
                 return df_merged
             else:
                 org_id = call_api(org_strings)
@@ -170,12 +175,12 @@ def get_org_id(df):
                 save_adjusted_data(df, df_name)
                 return df
 
-        except:
-                df['obtained_id'] = df['org_string'].map(org_id)
-                return df
-                # Save progress after each chunk
-                save_adjusted_data(df, df_name)
-                continue
+        except urllib.error.HTTPError:
+            print("\nSleeping as close to batch limit")  
+            time.sleep(5 * 60)
+            # # Save progress after each chunk
+            #     save_adjusted_data(df, df_name)
+            continue
         break
 
         # Print progress
@@ -186,7 +191,7 @@ def get_org_id(df):
             # if chunk_propn < len(org_strings):
             #     print("\nSleeping as close to batch limit")  
             #     time.sleep(5 * 60)
-    return org_id
+    return df
            
 
 def post_processing(df, df_name):

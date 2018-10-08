@@ -5,6 +5,7 @@
 - send email notification once all classified?
 - tqdm is a cool package for progress bars https://pypi.org/project/tqdm/
 - output is creating an additional duplicated index column 
+- check columns like org_type dont already exist before mapping to them
 
 ---------------COMPLETED--------------
 - connect to localhost - org_type classifier - DONE
