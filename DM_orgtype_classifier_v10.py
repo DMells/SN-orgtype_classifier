@@ -28,12 +28,13 @@ def get_input_args():
 def load_df(data_dir, data_file):
     df = pd.read_csv(str(data_dir + data_file))
     df_name = str(data_file)[:-4]
-    # df = df[0:5000]
+    df = df[0:10]
     return df, df_name
 
 def pre_processing(df):
     print("Data Sample: ")
     print(df.head(3))
+    # String_col used in post_processing too so make global
     global string_col
     string_col = str(input("\nWhat is the exact name of the column containing the organisation name? \n(without quotes, see above sample): \n"))
     time.sleep(0.5)
@@ -134,7 +135,9 @@ def get_org_id(df):
         chunk_propn = 0 
     # Split org_string array into multiple arrays. Length of sub-array based on max batch size of 600 
     # rounded up. array_split doesn't have to have equal batch sizes.
-        for chunk in np.array_split(org_strings, math.ceil(len(org_strings)/600), axis=0):
+        # pdb.set_trace()
+        for chunk in np.array_split(org_strings, math.ceil(len(org_strings)/5), axis=0):
+            # pdb.set_trace()
             print("\nProcessing companies house batch of size: " + str(len(chunk)))
             # For each org_string in the sub-array of org_strings, pull org data from companies house
             for word in chunk:
