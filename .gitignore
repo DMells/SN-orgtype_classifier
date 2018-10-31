@@ -5,3 +5,7 @@ __pycache__
 orgtype-classifier
 previous_versions
 *.csv
+Billing
+dedupe-examples
+dedupetest.py
+testsubprocess.py

@@ -11,6 +11,7 @@
 - **script includes dedupe api call - output link showing results**
 - consider increasing comp house subset - postcode etc
 - write up next steps in google docs task 2
+- 
 ---------------COMPLETED--------------
 - connect to localhost - org_type classifier - DONE
 -Load dataframe - DONE
