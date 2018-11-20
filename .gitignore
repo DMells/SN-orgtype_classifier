@@ -1,11 +1,11 @@
 config.py
-__pycache__
-.pytest_cache
+__pycache__/
+.cache/
+.pytest_cache/
 .ipynb_checkpoints
-orgtype-classifier
-previous_versions
+previous_versions/
 *.csv
-Billing
+Billing/
 dedupe-examples
 dedupetest.py
 testsubprocess.py
