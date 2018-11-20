@@ -13,7 +13,6 @@ import config
 import sys
 import logging
 import subprocess
-# from csvdedupe import CSVDedupe
 from tqdm import tqdm
 logger = logging.getLogger(__name__)
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -56,14 +55,16 @@ def load_df(data_dir, data_file):
     :param data_dir: the directory containing the datafile
         (default: current location)
     :param data_file: the csv file containing organisation information
-
     :return df: pandas dataframe
     :return df_name: name of df
     """
     df = pd.read_csv(str(data_dir + data_file))
     df_name = str(data_file)[:-4]
     # Dedupe won't run fully if dataframe not big enough (i.e. df[:5] won't work)
-    df = df[:10]
+    # df = df[100:200]
+    df = df[:200]
+
+    assert len(df) > 5    
     return df, df_name
 
 
@@ -76,7 +77,6 @@ def pre_processing(df):
         them or quit
 
     :param df: the pandas dataframe
-
     :return: df
     """
     print("Data Sample: ")
@@ -121,7 +121,6 @@ def classify_org(df):
     Pass org_strings array to orgtype-classifier API to get the org_type
 
     :param df: the pandas dataframe
-
     :return orgtype_dict : dictionary containing the org_string and org_type
     """
 
@@ -160,7 +159,6 @@ def map_columns(df):
         classification and is mapped to 'company_or_not'
 
     :param df: pandas dataframe
-
     :return df: pandas dataframe
     """
 
@@ -187,9 +185,7 @@ def map_columns(df):
 def get_org_id(df):
     """
     Lookup company name via Companies House API and return company number
-
     :param df: pandas dataframe containing the organisation name
-
     :return df: Amended dataframe containing additional company information
     """
 
@@ -202,7 +198,7 @@ def get_org_id(df):
     # api states max batch of 600...
     # array_split doesn't have to have equal batch sizes.
     for chunk in np.array_split(org_strings,
-                                math.ceil(len(org_strings) / 600), axis=0):
+                                math.ceil(len(org_strings) / 100), axis=0):
 
         print("\nProcessing companies house batch of size: " + str(len(chunk)))
 
@@ -220,7 +216,7 @@ def get_org_id(df):
                 try:
                     address = comp_house_dict['items'][0]['address_snippet']
                 except:
-                    address = 'None'
+                    address = str('None')
 
                 try:
                     inc_date = comp_house_dict['items'][0]['date_of_creation']
@@ -248,53 +244,11 @@ def get_org_id(df):
               str(len(org_strings)))
         # pdb.set_trace()
         df['obtained_id'] = df['org_string'].map(ch_org_dict)
-        try:
-            df[['obtained_id', 'address', 'incorporation_date']] = pd.DataFrame(df['obtained_id'].values.tolist())
-        except KeyError as e:
-            print(e.message)
+    try:
+        df[['obtained_id', 'address', 'incorporation_date']] = pd.DataFrame(df['obtained_id'].values.tolist())
+    except KeyError as e:
+        print(e.message)
     return df
-
-#     while True:
-#         try:
-#             # If obtained_id already exists (i.e previous runtime crashed, but saved progress)
-#             # Filter the df for only the blank obtained_id rows
-#             if 'obtained_id' in df:
-#             # Filter df for blank ids
-                
-#                 isnull = df.obtained_id.isnull()
-#                 notnull = df.obtained_id.notnull()
-#                 empty_id_df = df[isnull]
-#                 filled_id_df = df[notnull]
-#                 org_strings = empty_id_df['org_string']
-#                 partial_org_id = call_api(org_strings)
-#                 # pdb.set_trace()
-#                 # Below returns A value is trying to be set on a copy of a slice from a DataFrame.
-# # Try using .loc[row_indexer,col_indexer] = value instead
-#                 empty_id_df['obtained_id'] = empty_id_df['org_string'].map(partial_org_id)
-#                 df_merged = pd.concat([filled_id_df, empty_id_df])
-#                 # ***********code moves to except after the below:
-#                 df_merged.to_csv(df_name + '_partial.csv')
-#                 return df_merged
-#             else:
-#                 org_id = call_api(org_strings)
-#                 df['obtained_id'] = df['org_string'].map(org_id)
-#                 save_adjusted_data(df, df_name)
-#                 return df
-
-#         except urllib.error.HTTPError:
-#             print("\nSleeping as close to batch limit")  
-#             time.sleep(5 * 60)
-#             # # Save progress after each chunk
-#             #     save_adjusted_data(df, df_name)
-#             continue
-#         break
-
-#         # Companies House API only allows up to 600 requests per 5 mins.
-#         # If the batch wasn't the last batch, wait for 5 mins, then loop back to grab next chunk
-#             # if chunk_propn < len(org_strings):
-#             #     print("\nSleeping as close to batch limit")  
-#             #     time.sleep(5 * 60)
-#     return df
 
 
 def post_processing(df, df_name):
@@ -343,7 +297,7 @@ def post_processing(df, df_name):
         # save to separate file for further investigation
         # Prevents having to re-run each time just to see the errors
         if (sum(df['id_mismatch'])) > 0:
-            df_errors = df[df['id_mismatch']==True]
+            df_errors = df[df['id_mismatch'] == True]
             print(df_errors[[string_col, id_comparison, 'obtained_id']])
             time.sleep(0.5)
             print("\nSaving mismatching ids to : " + str(df_name) +
@@ -370,42 +324,54 @@ def deduplicate(infile, string, output_file):
     p.wait()
 
 
-def save_adjusted_data(df, name):
+def confidence_processing(data_dir, df_name, string_col):
+    '''
+    Split deduped dataframe twice. One is for deduped rows >90% confidence
+    score AND no. of letters > Y. This is because a deviation for a string of
+    3 letters will likely mean it's a totally different company. Second is for
+    all other data.
+
+    :param data_dir: filepath to folder containing deduped data
+    :param df_name: name of dataframe
+    :string_col: user-defined name for the column containing the org_strings
+
+    :return df_90Y_accept_name: name of df with >90% & > Y length strings
+    :return df_90Y_unaccept_name: name of df with <90% or
+    (>90% AND Y length strings)
+    '''
+    df = pd.read_csv(str(data_dir + df_name + '_deduped.csv'))
+    Y = int(input("\nFor confidence scores of >90%, select the string-length below which no further investigation is deemed necessary (default 3):") or 3)
+    df_90Y_accept = df[(df['Confidence Score']>=0.9) & (df[string_col].str.len() >= Y)]
+    df_90Y_unaccept = df[~df[string_col].isin(df_90Y_accept[string_col])]
+    time.sleep(0.5)
+    print("Splitting dataframes based on confidence/letter criteria...")
+    time.sleep(0.5)
+    print("...Done")
+    df_90Y_accept_name = save_data(data_dir, df_90Y_accept, df_name, '_accepted_conf' )
+    time.sleep(0.5)
+    df_90Y_unaccept_name = save_data(data_dir, df_90Y_unaccept, df_name, '_unaccepted_conf' )
+    return df_90Y_accept_name, df_90Y_unaccept_name
+
+def save_data(data_dir, df, df_name, suffix=None):
     """
     Save adjusted dataframe to 'filename + _classified.csv'
-
+    :param data_dir: filepath to folder containing deduped data
     :param df
     :param name : name of dataframe
+    :param suffix: ending of filename (i.e. _classified, _deduped etc)
 
-    :return None
+    :return df_name
     """
-    print("\nSaving main output to : " + str(name) + '_classified.csv')
-    df.to_csv(name + '_classified.csv')
-    df_name = name + "_classified.csv"
-    return df, df_name
-
-
-# ---------------------------------TESTS--------------------------
-def test_check_df_loaded():
-    try:
-        df, df_name = load_df('', 'sample_orgs.csv')
-    except None:
-        pytest.fail("Error loading df")
-
-
-def test_checkinputisstring():
-    df, df_name = load_df('', 'sample_orgs.csv')
-    assert ptypes.is_string_dtype(df['org_string'])
-
-
-def test_checknoblanks():
-    df, df_name = load_df('', 'sample_orgs.csv')
-    assert df['org_string'].isnull().values.any() is False
-
-
-def test_checkconnectedtolocalhost():
-    assert os.system("ping -c 1 localhost") == 0
-
+    org_file_name = data_dir + df_name
+    if suffix:
+        print("\nSaving output to : " + str(orig_file_name + suffix) + '.csv')
+        df.to_csv(orig_file_name + suffix + '.csv')
+        df_name += suffix + '.csv'
+    else: 
+        print("\nSaving output to : " + str(data_dir + df_name) + '.csv')
+        df.to_csv(orig_file_name + '.csv')
+        df_name += '.csv'
+    return df_name
 
 # ---------------------------------------------------------------
 if __name__ == '__main__':
@@ -415,10 +381,10 @@ if __name__ == '__main__':
     pre_processing(df)
     df = map_columns(df)
     df = get_org_id(df)
-    save_adjusted_data(df, df_name)
     df = post_processing(df, df_name)
-    classd_df, classd_name = save_adjusted_data(df, df_name)
-    deduplicate(classd_name, string_col, df_name + '_deduped.csv')
+    classd_name = save_data(in_arg.dir, df, df_name, '_classified')
+    deduplicate('../../' + classd_name, string_col,'../../' + df_name + '_deduped.csv')
+    confidence_processing(in_arg.dir, df_name, string_col)
 
     # To run and allow pdb to catch any error and enter debug mode :
-    # python -m pdb -c continue DM_orgtype_classifier_v14.py
+    # python -m pdb -c continue DM_orgtype_classifier_v15.py

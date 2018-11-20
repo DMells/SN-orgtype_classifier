@@ -3,15 +3,15 @@
 - some of the comp house api strings have double spaces
 - cant get comp house multiple string to work when passed as a list to chwrapper. Try curl and concatenating strings.
 - send email notification once all classified?
-- tqdm is a cool package for progress bars https://pypi.org/project/tqdm/
 - output is creating an additional duplicated index column 
 - check columns like org_type dont already exist before mapping to them
 - add column variables to arg parsing
-- confidence score from ch api
-- **script includes dedupe api call - output link showing results**
-- consider increasing comp house subset - postcode etc
-- write up next steps in google docs task 2
-- 
+
+- if number of manual matching steps in dedupe phase reaches max row length the program breaks. "  File "/Users/davidmellor/anaconda/envs/spendnetwork/lib/python3.6/site-packages/dedupe/labeler.py", line 257, in pop
+    raise IndexError("No more unlabeled examples to label")
+IndexError: No more unlabeled examples to label"
+- Add in module/method which just dedupes the file. 
+- deduped files not saving properly
 ---------------COMPLETED--------------
 - connect to localhost - org_type classifier - DONE
 -Load dataframe - DONE
@@ -29,3 +29,6 @@
 - perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time. - DONE
 - build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id' - DONE
 - could just save after each batch, remove sleep timer and just force through until finished. - DONE
+- consider increasing comp house subset - postcode etc DONE
+- confidence score from ch api DONE
+- tqdm is a cool package for progress bars https://pypi.org/project/tqdm/ DONE
