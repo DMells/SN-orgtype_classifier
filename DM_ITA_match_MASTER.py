@@ -112,9 +112,9 @@ def save_data(data_dir, df, df_name, suffix=None):
         df_name += '.csv'
     return df_name
 
-DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'ITA_db.db')
 
-def connect_SQL(db_path=DEFAULT_PATH):
+
+def connect_SQL(db_path):
     '''
     Establishes connection to specified SQL database
     :param db_path: - path to db file
@@ -235,7 +235,8 @@ if __name__ == '__main__':
     in_arg = get_input_args()
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
     # # # # # # # pre_processing(df)
-    con = connect_SQL()
+    DEFAULT_PATH = os.path.join(os.path.dirname(__file__), in_arg.dir + 'ITA_db.db')
+    con = connect_SQL(DEFAULT_PATH)
     results = sql_query(con)
     df = add_info(results, df)
     # # # # # # # df = post_processing(df, df_name)
