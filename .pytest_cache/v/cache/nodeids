@@ -1,7 +1,0 @@
-[
-  "DM_orgtype_classifier_v11.py::test_check_df_loaded",
-  "DM_orgtype_classifier_v11.py::test_checkinputisstring",
-  "DM_orgtype_classifier_v11.py::test_checknoblanks",
-  "DM_orgtype_classifier_v11.py::test_checkconnectedtolocalhost",
-  "DM_orgtype_classifier_v11.py::test_companies_house_lookup_by_number"
-]
