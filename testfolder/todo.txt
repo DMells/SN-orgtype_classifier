@@ -1,0 +1,34 @@
+- Add probability to a df column too - 
+- Refactor org_id and classify_org as duplicate code 
+- some of the comp house api strings have double spaces
+- cant get comp house multiple string to work when passed as a list to chwrapper. Try curl and concatenating strings.
+- send email notification once all classified?
+- output is creating an additional duplicated index column 
+- check columns like org_type dont already exist before mapping to them
+- add column variables to arg parsing
+- if number of manual matching steps in dedupe phase reaches max row length the program breaks. "  File "/Users/davidmellor/anaconda/envs/spendnetwork/lib/python3.6/site-packages/dedupe/labeler.py", line 257, in pop
+    raise IndexError("No more unlabeled examples to label")
+IndexError: No more unlabeled examples to label"
+- Add in module/method which just dedupes the file. 
+
+---------------COMPLETED--------------
+- deduped files not saving properly - DONE
+- connect to localhost - org_type classifier - DONE
+-Load dataframe - DONE
+-Loop through each item of org_string - DONE
+-Pass string to hosted server URL - DONE
+-Fetch returned result (highest prob) - DONE
+-Add result to df column - DONE
+-Lookup result to find if company/not company - DONE
+- currently starting from correct place but not merging old with new dicts. - DONE
+- Obtain first 100 org strings, and concatenate them into the request. - DONE
+- Some org_strings don't output anything from the orgtype-classifier and results in a json error - could be that actually only takes up to 50 strings, not 100. - DONE
+- looks like you can pass multiple requests to companies house - CANT
+- need to output matched company name too from comp house api - DONE
+- terms like '001 TAXIS' don't return the correct response (blank dictionary) - DONE
+- perhaps implement the save function, incase connection is lost for big data sets. Then, can build code to start from first blank org_id entry next time. - DONE
+- build option to type in the name of the org string column. For example, cater data file has the org_string column with title supplier_name. Can also then add another which specifies which column to compare obtained_id to i.e. 'supplier_id' - DONE
+- could just save after each batch, remove sleep timer and just force through until finished. - DONE
+- consider increasing comp house subset - postcode etc DONE
+- confidence score from ch api DONE
+- tqdm is a cool package for progress bars https://pypi.org/project/tqdm/ DONE
