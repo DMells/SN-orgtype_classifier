@@ -9,6 +9,7 @@ import subprocess
 from tqdm import tqdm
 import sqlite3
 import re
+from pathlib import Path
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
@@ -20,7 +21,7 @@ def get_input_args():
     """
 
     parser = argparse.ArgumentParser(description="Input data file name/loc")
-    parser.add_argument('--dir', default='Italian_Data/', type=str,
+    parser.add_argument('--dir', default='Data_Projects/Italian_Data/', type=str,
                         help="set the data directory")
     parser.add_argument('--datafile', default='italian_suppliers_abc.csv', type=str,
                         help="set the data file")
@@ -53,11 +54,18 @@ def deduplicate(infile, string, output_file):
     :param string: the user-defined org_string column name (default org_string)
     :param output_file: the deduped filename
     """
+    pdb.set_trace()
+    # use pathlib to obtain the parent directory.
+    homedir = Path(__file__).resolve().parents[0]
+    data_fp = str(homedir) + "/" + str(in_arg.dir)
+    training_fp = data_fp + "training.json"
+    settings_fp = data_fp + "learned_settings"
     cmd = ['python csvdedupe.py ' + infile + ' --field_names ' + str(string) +
-            ' address obtd_id obtained_address obtd_legal_name --output_file ' + str(output_file)]
+            ' address obtd_id obtained_address obtd_legal_name --output_file ' + str(output_file) + ' --training_file ' + str(training_fp) + ' --settings_file ' + str(settings_fp)]
     p = subprocess.Popen(cmd, cwd='./csvdedupe/csvdedupe', shell=True)
     p.wait()
 
+    
 
 def confidence_processing(data_dir, df_name, string_col):
     '''
@@ -222,7 +230,6 @@ def file_tidy(df, joined_file=None):
     if joined_file:
             os.remove(in_arg.dir + joined_file)
 
-
     # Can add in a yield or something here to make the function continue after confidence_processing has run.
     
     return df
@@ -234,6 +241,7 @@ def file_tidy(df, joined_file=None):
 if __name__ == '__main__':
     in_arg = get_input_args()
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
+
     # # # # # # # pre_processing(df)
     DEFAULT_PATH = os.path.join(os.path.dirname(__file__), in_arg.dir + 'ITA_db.db')
     con = connect_SQL(DEFAULT_PATH)
