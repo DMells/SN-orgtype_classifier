@@ -9,6 +9,5 @@ Billing
 dedupe-examples
 dedupetest.py
 testsubprocess.py
-Data_Projects/
+Data_Projects
 .gitignore
-.DS_store
