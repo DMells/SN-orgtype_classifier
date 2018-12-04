@@ -240,9 +240,7 @@ def file_tidy(df, joined_file=None):
     
     return df
 
-# Some org_strings have detailed info in them i.e. ati costituita da
-# ---------------------------------------------------------------
-if __name__ == '__main__':
+def main():
     in_arg = get_input_args()
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
     # # # # # # # pre_processing(df)
@@ -259,6 +257,11 @@ if __name__ == '__main__':
     # df, df_name = assign_org_ids_to_clusters(in_arg.dir, in_arg.datafile)
     df, df_name = assign_org_ids_to_clusters(df, df_name)
     df = confidence_processing(in_arg.dir, df_name, 'org_string')
+
+# Some org_strings have detailed info in them i.e. ati costituita da
+# ---------------------------------------------------------------
+if __name__ == '__main__':
+    main()
 
     # To run and allow pdb to catch any error and enter debug mode :
     # python -m pdb -c continue DM_ITA_orgtype_classifierv5.py
