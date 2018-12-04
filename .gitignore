@@ -3,7 +3,7 @@ __pycache__
 .cache
 .pytest_cache
 .ipynb_checkpoints
-previous_versions
+previous_versions/
 *.csv
 Billing
 dedupe-examples
