@@ -1,13 +1,10 @@
 config.py
-__pycache__
+__pycache__/
 .cache
 .pytest_cache
 .ipynb_checkpoints
-previous_versions
+previous_versions/
 *.csv
-Billing
-dedupe-examples
+Billing/
 dedupetest.py
-testsubprocess.py
-Data_Projects
-.gitignore
+Data_Projects/
