@@ -19,7 +19,7 @@ def get_input_args():
 
     :return: arguments variable for both directory and the data file
     """
-
+    pdb.set_trace()
     parser = argparse.ArgumentParser(description="Input data file name/loc")
     parser.add_argument('--dir', default='Data_Projects/Italian_Data/', type=str,
                         help="set the data directory")
@@ -54,10 +54,11 @@ def deduplicate(infile, string, output_file):
     :param string: the user-defined org_string column name (default org_string)
     :param output_file: the deduped filename
     """
-    pdb.set_trace()
     # use pathlib to obtain the parent directory.
     homedir = Path(__file__).resolve().parents[0]
     data_fp = str(homedir) + "/" + str(in_arg.dir)
+
+    # Module will look in the data directory for dedupe training/learned_settings files. If not, will create them there.
     training_fp = data_fp + "training.json"
     settings_fp = data_fp + "learned_settings"
     cmd = ['python csvdedupe.py ' + infile + ' --field_names ' + str(string) +
@@ -85,7 +86,6 @@ def confidence_processing(data_dir, df_name, string_col):
     
     df = pd.read_csv(str(data_dir + df_name))
     Y = int(input("\nFor confidence scores >70%, select str length above which no further investigation is necessary (def=3):") or 3)
-    pdb.set_trace()
     df_70Y_accept = df[(df['Confidence Score']>=0.7) & (df[string_col].str.len() >= Y)]
     # df_70Y_accept = df_70Y_accept.drop(df_70Y_accept.columns[0], axis = 1)
     # ~ = opposite of what follows (i.e. is not in)
@@ -220,9 +220,15 @@ def assign_org_ids_to_clusters(df, df_name):
         return df, df_name
 
 
-def file_tidy(df, joined_file=None):    
+def file_tidy(df, joined_file=None):   
+    '''
+    Cleans up the output from deduping the file - dedupe adds duplicate id columns, etc.
+    :param df: the pandas dataframe
+    :param joined_file: the initial sql-joined & matched file
+
+    :returns df
+    ''' 
     # results column not needed
-    pdb.set_trace()
     df = df.drop('results', axis=1)
     # remove ('unnamed: 2') id column as duplicated. flags uses regex package to ignore case formatting.
     df = df.drop(df.columns[df.columns.str.contains('unnamed', flags=re.IGNORECASE)], axis = 1)
@@ -234,14 +240,11 @@ def file_tidy(df, joined_file=None):
     
     return df
 
-
-
 # Some org_strings have detailed info in them i.e. ati costituita da
 # ---------------------------------------------------------------
 if __name__ == '__main__':
     in_arg = get_input_args()
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
-
     # # # # # # # pre_processing(df)
     DEFAULT_PATH = os.path.join(os.path.dirname(__file__), in_arg.dir + 'ITA_db.db')
     con = connect_SQL(DEFAULT_PATH)
@@ -249,6 +252,7 @@ if __name__ == '__main__':
     df = add_info(results, df)
     # # # # # # # df = post_processing(df, df_name)
     joined_file = save_data(in_arg.dir, df, df_name, '_merged')
+    pdb.set_trace()
     deduplicate('../../' + in_arg.dir + joined_file, 'org_string' , '../../' + in_arg.dir + df_name + '_ddup.csv')
     df, df_name = load_df(in_arg.dir, in_arg.datafile[:-4] + '_ddup.csv')
     df = file_tidy(df, joined_file=None)
