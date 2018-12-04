@@ -1,8 +1,5 @@
 import pandas as pd
-import pytest
 import requests
-import pandas.api.types as ptypes
-import os
 import argparse
 import numpy as np
 import chwrapper
@@ -24,7 +21,8 @@ def connect_to_orgclassifier():
     """
     # os.system('open -a Terminal .')
     cmd = ['python server.py model.pkl.gz']
-    p = subprocess.Popen(cmd, shell=True, cwd=r'orgtype-classifier', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmd, shell=True, cwd=r'orgtype-classifier',
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print("Connecting to orgtype-classifier...")
     time.sleep(3)
     print("...Done\n")
@@ -60,11 +58,9 @@ def load_df(data_dir, data_file):
     """
     df = pd.read_csv(str(data_dir + data_file))
     df_name = str(data_file)[:-4]
-    # Dedupe won't run fully if dataframe not big enough (i.e. df[:5] won't work)
-    # df = df[100:200]
     df = df[:200]
 
-    assert len(df) > 5    
+    assert len(df) > 5
     return df, df_name
 
 
@@ -84,7 +80,8 @@ def pre_processing(df):
     # String_col used in post_processing too therefore initiate globally
     global string_col
     string_col = str(input("\nWhat is the exact name of the column containing the organisation name? \n \
-        (default is 'org_string' - hit enter for this input): \n") or 'org_string')
+        (default is 'org_string' - hit enter for this input): \n") or
+                     'org_string')
     time.sleep(0.5)
 
     while True:
@@ -178,7 +175,7 @@ def map_columns(df):
     orgtype_dict = classify_org(df)
     df['org_type'] = df['org_string'].map(orgtype_dict)
     df['company_or_not'] = df['org_type'].map(comp_or_not_dict)
-    
+
     return df
 
 
@@ -211,7 +208,8 @@ def get_org_id(df):
                 # response.json() returns a nested dict with complete org info
                 # Below pulls just the company number.
                 # pdb.set_trace()
-                ch_org_dict[word] = [comp_house_dict['items'][0]['company_number']]
+                ch_org_dict[word] = [comp_house_dict['items'][0]
+                                    ['company_number']]
                 # Pull through address and incorporation date
                 try:
                     address = comp_house_dict['items'][0]['address_snippet']
@@ -245,7 +243,8 @@ def get_org_id(df):
         # pdb.set_trace()
         df['obtained_id'] = df['org_string'].map(ch_org_dict)
     try:
-        df[['obtained_id', 'address', 'incorporation_date']] = pd.DataFrame(df['obtained_id'].values.tolist())
+        df[['obtained_id', 'address', 'incorporation_date']] = \
+            pd.DataFrame(df['obtained_id'].values.tolist())
     except KeyError as e:
         print(e.message)
     return df
@@ -273,9 +272,11 @@ def post_processing(df, df_name):
     print("\nThere are {} blank org_ids in the file.".format(len(nans(df))))
     if len(nans(df)) != 0:
         print(nans(df))
-    preset_id = str(input("\nIs there a column in the dataset representing already-analysed company numbers? (y/n) :"))
+    preset_id = str(input("\nIs there a column in the dataset representing \
+        already-analysed company numbers? (y/n) :"))
     if preset_id == 'y':
-        id_comparison = str(input("\nPlease enter the name of the comparative column :\n"))
+        id_comparison = str(input("\nPlease enter the name of the comparative\
+         column :\n"))
         time.sleep(0.5)
         while True:
             try:
@@ -283,7 +284,8 @@ def post_processing(df, df_name):
                 df[id_comparison] = df[id_comparison].str.lstrip("0")
                 df['obtained_id'] = df['obtained_id'].str.lstrip("0")
             except KeyError:
-                id_comparison = str(input("\nIncorrect id column name entered, try again :"))
+                id_comparison = str(input("\nIncorrect id column name entered, \
+                    try again :"))
                 continue
             break
 
@@ -340,17 +342,23 @@ def confidence_processing(data_dir, df_name, string_col):
     (>90% AND Y length strings)
     '''
     df = pd.read_csv(str(data_dir + df_name + '_deduped.csv'))
-    Y = int(input("\nFor confidence scores of >90%, select the string-length below which no further investigation is deemed necessary (default 3):") or 3)
-    df_90Y_accept = df[(df['Confidence Score']>=0.9) & (df[string_col].str.len() >= Y)]
+    Y = int(input("\nFor confidence scores of >90%, select the string-length\
+     below which no further investigation is deemed necessary \
+     (default 3):") or 3)
+    df_90Y_accept = df[(df['Confidence Score'] >= 0.9) & (df[string_col]
+                                                          .str.len() >= Y)]
     df_90Y_unaccept = df[~df[string_col].isin(df_90Y_accept[string_col])]
     time.sleep(0.5)
     print("Splitting dataframes based on confidence/letter criteria...")
     time.sleep(0.5)
     print("...Done")
-    df_90Y_accept_name = save_data(data_dir, df_90Y_accept, df_name, '_accepted_conf' )
+    df_90Y_accept_name = save_data(data_dir, df_90Y_accept, df_name,
+                                   '_accepted_conf')
     time.sleep(0.5)
-    df_90Y_unaccept_name = save_data(data_dir, df_90Y_unaccept, df_name, '_unaccepted_conf' )
+    df_90Y_unaccept_name = save_data(data_dir, df_90Y_unaccept,
+                                     df_name, '_unaccepted_conf')
     return df_90Y_accept_name, df_90Y_unaccept_name
+
 
 def save_data(data_dir, df, df_name, suffix=None):
     """
@@ -362,16 +370,17 @@ def save_data(data_dir, df, df_name, suffix=None):
 
     :return df_name
     """
-    org_file_name = data_dir + df_name
+    orig_file_name = data_dir + df_name
     if suffix:
         print("\nSaving output to : " + str(orig_file_name + suffix) + '.csv')
         df.to_csv(orig_file_name + suffix + '.csv')
         df_name += suffix + '.csv'
-    else: 
+    else:
         print("\nSaving output to : " + str(data_dir + df_name) + '.csv')
         df.to_csv(orig_file_name + '.csv')
         df_name += '.csv'
     return df_name
+
 
 # ---------------------------------------------------------------
 if __name__ == '__main__':
@@ -383,7 +392,8 @@ if __name__ == '__main__':
     df = get_org_id(df)
     df = post_processing(df, df_name)
     classd_name = save_data(in_arg.dir, df, df_name, '_classified')
-    deduplicate('../../' + classd_name, string_col,'../../' + df_name + '_deduped.csv')
+    deduplicate('../../' + classd_name, string_col, '../../' +
+                df_name + '_deduped.csv')
     confidence_processing(in_arg.dir, df_name, string_col)
 
     # To run and allow pdb to catch any error and enter debug mode :
