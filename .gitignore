@@ -8,3 +8,4 @@ previous_versions/
 Billing/
 dedupetest.py
 Data_Projects/
+.DS_Store

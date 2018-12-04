@@ -10,6 +10,7 @@ from tqdm import tqdm
 import sqlite3
 import re
 from pathlib import Path
+import importlib
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
@@ -65,7 +66,6 @@ def deduplicate(infile, string, output_file):
     p = subprocess.Popen(cmd, cwd='./csvdedupe/csvdedupe', shell=True)
     p.wait()
 
-    
 
 def confidence_processing(data_dir, df_name, string_col):
     '''
@@ -120,48 +120,6 @@ def save_data(data_dir, df, df_name, suffix=None):
         df_name += '.csv'
     return df_name
 
-
-
-def connect_SQL(db_path):
-    '''
-    Establishes connection to specified SQL database
-    :param db_path: - path to db file
-
-    :return con: connection to the database
-    '''
-    con = sqlite3.connect(db_path)
-    return con
-
-
-def sql_query(con):
-    """
-    Execute SQL query which joins the two data files together
-    :file sd_abc: represents the 'truth' i.e. perhaps government/official data
-    :file italian_suppliers_abc: the manually curated data to which we wish to add official company data and eventually dedupe.
-
-    :return results: query results in list format. Each element is a tuple containing strings -  org name, address, id, legal name and tax id.
-    """
-    cur = con.cursor()
-    org_id_matches = """
-    SELECT 
-        italian_suppliers_abc.org_string,
-        italian_suppliers_abc.address,
-        sd_abc.id,
-        sd_abc.legal_name,
-        sd_abc.tax_id
-
-    FROM
-        italian_suppliers_abc
-
-    LEFT JOIN sd_abc ON italian_suppliers_abc.org_string == sd_abc.company_name
-
-    WHERE
-        sd_abc.id NOT NULL;
-    """ 
-
-    cur.execute(org_id_matches)
-    results = cur.fetchall()
-    return results
 
 def add_info(results, df):
     '''
@@ -240,12 +198,17 @@ def file_tidy(df, joined_file=None):
 # ---------------------------------------------------------------
 if __name__ == '__main__':
     in_arg = get_input_args()
+    #Set the PYTHONPATH variable to include the directory in which to search for the SQLquery
+    sys.path.insert(0, os.getcwd() + "/" + in_arg.dir)
+    # Import the SQLquery module from the relevant Data_Projects folder
+    sqlfile = __import__('sqlfile')
     df, df_name = load_df(in_arg.dir, in_arg.datafile)
-
     # # # # # # # pre_processing(df)
     DEFAULT_PATH = os.path.join(os.path.dirname(__file__), in_arg.dir + 'ITA_db.db')
-    con = connect_SQL(DEFAULT_PATH)
-    results = sql_query(con)
+    con = sqlfile.connect_SQL(DEFAULT_PATH)
+    results = sqlfile.sql_query(con)
+    # con = connect_SQL(DEFAULT_PATH)
+    # results = sql_query(con)
     df = add_info(results, df)
     # # # # # # # df = post_processing(df, df_name)
     joined_file = save_data(in_arg.dir, df, df_name, '_merged')
