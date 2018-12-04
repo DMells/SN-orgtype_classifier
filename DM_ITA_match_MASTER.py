@@ -21,7 +21,7 @@ def get_input_args():
     """
 
     parser = argparse.ArgumentParser(description="Input data file name/loc")
-    parser.add_argument('--dir', default='Data_Projects/Italian_Data/', type=str,
+    parser.add_argument('--dir', default='Data_Projects/ITA_data/', type=str,
                         help="set the data directory")
     parser.add_argument('--datafile', default='italian_suppliers_abc.csv', type=str,
                         help="set the data file")
@@ -258,3 +258,5 @@ if __name__ == '__main__':
 
     # To run and allow pdb to catch any error and enter debug mode :
     # python -m pdb -c continue DM_ITA_orgtype_classifierv5.py
+    # git commit -a -m <message>
+    # git push origin master
