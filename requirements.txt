@@ -31,7 +31,7 @@ persistent==4.4.2
 pipenv==2018.7.1
 pipreqs==0.4.9
 pluggy==0.7.1
-py==1.7.0
+py==1.10.0
 pyhacrf-datamade==0.2.3
 PyLBFGS==0.2.0.12
 pyparsing==2.3.0
