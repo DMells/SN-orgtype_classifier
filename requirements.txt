@@ -2,7 +2,7 @@ affinegap==1.10
 atomicwrites==1.2.1
 attrs==18.2.0
 backports.csv==1.0.6
-bottle==0.12.13
+bottle==0.12.20
 BTrees==4.5.1
 categorical-distance==1.9
 certifi==2018.8.24
