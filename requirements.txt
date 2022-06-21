@@ -25,7 +25,7 @@ kiwisolver==1.0.1
 Levenshtein-search==1.4.4
 matplotlib==3.0.2
 more-itertools==4.3.0
-numpy==1.15.2
+numpy==1.22.0
 pandas==0.23.0
 persistent==4.4.2
 pipenv==2018.7.1
