@@ -5,7 +5,7 @@ backports.csv==1.0.6
 bottle==0.12.13
 BTrees==4.5.1
 categorical-distance==1.9
-certifi==2018.8.24
+certifi==2022.12.7
 chardet==3.0.4
 chwrapper==0.3.0
 csvdedupe==0.1.18
